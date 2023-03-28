@@ -76,11 +76,15 @@ class AESFieldElement:
     @property
     def hex(self):
         bitstr = "".join(str(b) for b in self._bits)
+        if not bitstr:
+            return 0
         return hex(int(bitstr, 2))[2:]
 
     @property
     def int(self):
         bitstr = "".join(str(b) for b in self._bits)
+        if not bitstr:
+            return 0
         return int(bitstr, 2)
 
     @property
