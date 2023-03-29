@@ -2,6 +2,7 @@ from AES import AES_128, AES_192, AES_256, hexstr
 from time import time
 
 
+# Form of the test data: (AES class, plaintext, key, cipher)
 TESTS = (
     (
         AES_128,
@@ -30,6 +31,7 @@ TESTS = (
 )
 
 
+# Form of the test data: (AES class, key)
 FILE_TESTS = (
     (AES_128, "02 65 4f a4 78 00 1e ab b8 66 10 22 33 48 1c 2d"),
     (AES_192, "01128d0304a706bdf04090a0ba8dc0e1f1015521339151a7"),
@@ -50,7 +52,7 @@ if __name__ == "__main__":
         else:
             print("Success decryption")
 
-    # Testing the algorithm on a file
+    # Testing the algorithm on the file
     with open("plaintext.txt", "rb") as f:
         plaintext = list(f.read())
 

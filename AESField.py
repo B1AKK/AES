@@ -2,6 +2,7 @@ from functools import reduce
 from copy import copy
 
 
+# Implementation of polynomials over Z2
 class BinPoly:
     def __init__(self, coefs):
         # Polynomial is stored as a list of coefficients
@@ -63,8 +64,8 @@ class BinPoly:
         return self._coefs[self._degree - item] if item <= self._degree else 0
 
 
+# Implementation of arithmetic in the AES field
 class AESFieldElement:
-    # Implementation of arithmetic in the AES field
     POLYGON = BinPoly([1, 0, 0, 0, 1, 1, 0, 1, 1])
 
     def __init__(self, bits):
