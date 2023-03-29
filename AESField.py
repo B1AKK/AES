@@ -4,6 +4,7 @@ from copy import copy
 
 class BinPoly:
     def __init__(self, coefs):
+        # Polynomial is stored as a list of coefficients
         assert all(map(lambda x: x in (0,1), coefs)), ValueError("All coefficients must be 1 or 0")
 
         self._coefs = list(coefs)
@@ -56,12 +57,14 @@ class BinPoly:
         return curr
 
     def __getitem__(self, item):
+        # Returns the coefficient of x**n
         assert isinstance(item, int) and item > -1, IndexError("Only non-negative integer indexes are allowed")
 
         return self._coefs[self._degree - item] if item <= self._degree else 0
 
 
 class AESFieldElement:
+    # Implementation of arithmetic in the AES field
     POLYGON = BinPoly([1, 0, 0, 0, 1, 1, 0, 1, 1])
 
     def __init__(self, bits):

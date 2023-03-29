@@ -45,10 +45,21 @@ def _sub_bytes(state):
         state[i] = [SBOX[byte] for byte in state[i]]
 
 
+def _inv_sub_bytes(state):
+    for i in range(4):
+        state[i] = [INV_SBOX[byte] for byte in state[i]]
+
+
 def _shift_rows(state):
-    for i in range(1,4):
+    for i in range(1, 4):
         state[0][i], state[1][i], state[2][i], state[3][i] = \
             state[i][i], state[(1+i) % 4][i], state[(2+i) % 4][i], state[(3+i) % 4][i]
+
+
+def _inv_shift_rows(state):
+    for i in range(1, 4):
+        state[0][i], state[1][i], state[2][i], state[3][i] = \
+            state[(-i) % 4][i], state[(1-i) % 4][i], state[(2-i) % 4][i], state[(3-i) % 4][i]
 
 
 def _mix_columns(state):
@@ -62,6 +73,23 @@ def _mix_columns(state):
         s.append(col[0] + b * col[1] + c * col[2] + col[3])
         s.append(col[0] + col[1] + b * col[2] + c * col[3])
         s.append(c * col[0] + col[1] + col[2] + b * col[3])
+        s = [byte.int for byte in s]
+        state[i] = s
+
+
+def _inv_mix_columns(state):
+    a = fromint(0x0e)
+    b = fromint(0x0b)
+    c = fromint(0x09)
+    d = fromint(0x0d)
+
+    for i, col in enumerate(state):
+        s = list()
+        col = [fromint(byte) for byte in col]
+        s.append(a * col[0] + b * col[1] + d * col[2] + c * col[3])
+        s.append(c * col[0] + a * col[1] + b * col[2] + d * col[3])
+        s.append(d * col[0] + c * col[1] + a * col[2] + b * col[3])
+        s.append(b * col[0] + d * col[1] + c * col[2] + a * col[3])
         s = [byte.int for byte in s]
         state[i] = s
 
@@ -95,7 +123,11 @@ def bytelist(hexstr):
 
     return res
 
+
 class AES:
+    # All input data for algorithms (plaintext, cipher, key) is represented as lists of bytes (integers in range 0, 255)
+    # word - 4-element list of bytes
+    # state is represented as a 4-element list of words
     def _key_schedule(self, key):
         w = []
         for i in range(self._nk):
@@ -134,7 +166,31 @@ class AES:
             res.extend(w)
         return res
 
+    def _decrypt_block(self, cipher, w):
+        state = list()
+        for i in range(4):
+            state.append(cipher[4 * i:4 * (i + 1)])
+
+        _add_round_key(state, w[4*self._nr:])
+
+        for i in range(self._nr - 1, 0, -1):
+            _inv_shift_rows(state)
+            _inv_sub_bytes(state)
+            _add_round_key(state, w[4*i:4*(i+1)])
+            _inv_mix_columns(state)
+
+        _inv_shift_rows(state)
+        _inv_sub_bytes(state)
+        _add_round_key(state, w[:4])
+
+        res = []
+        for w in state:
+            res.extend(w)
+        return res
+
     def encrypt(self, text, key):
+        # Translates text and key from a hex string of bytes to the byte list
+        # Splits text into 16-byte blocks for encryption
         if isinstance(key, str):
             key = bytelist(key)
         if isinstance(text, str):
@@ -149,6 +205,22 @@ class AES:
             text = text[16:]
 
         return cipher
+
+    def decrypt(self, cipher, key):
+        # Translates text and key from a hex string of bytes to the byte list
+        # Splits text into 16-byte blocks for decryption
+        if isinstance(key, str):
+            key = bytelist(key)
+        if isinstance(cipher, str):
+            cipher = bytelist(cipher)
+
+        plaintext = []
+        w = self._key_schedule(key)
+        while cipher:
+            plaintext.extend(self._decrypt_block(cipher[:16], w))
+            cipher = cipher[16:]
+
+        return plaintext
 
 
 class AES_128(AES):
@@ -168,9 +240,3 @@ class AES_256(AES):
         self._nk = 8
         self._nr = 14
 
-
-if __name__ == "__main__":
-    key = [int(byte, 16) for byte in "8e 73 b0 f7 da 0e 64 52 c8 10 f3 2b 80 90 79 e5 62 f8 ea d2 52 2c 6b 7b".split()]
-    aes = AES_192()
-    for w in aes._key_schedule(key):
-        print("".join(hex(byte)[2:].zfill(2) for byte in w))
