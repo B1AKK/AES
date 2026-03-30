@@ -32,7 +32,7 @@ print(f"Ciphertext: {hexstr(ciphertext_bytes)}")
 # Decrypt the ciphertext back to plaintext
 decrypted_bytes = aes.decrypt(ciphertext_bytes, key)
 print(f"Decrypted:  {hexstr(decrypted_bytes)}")
-
+```
 
 ## Testing
 The repository includes a `tests.py` suite that verifies the encryption and decryption logic against official AES standard test vectors. It also includes file-based performance benchmarking. You can run the test suite directly:
